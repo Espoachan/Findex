@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.16)
+project(Findex)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include_directories(core/include)
+
+add_executable(findex
+    core/main.cpp
+    core/indexer.cpp
+)
