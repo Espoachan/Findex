@@ -2,4 +2,4 @@
 
 #include <string>
 
-void buildIndex(const std::string& rootFolder);
+    void buildIndex(const std::string& rootFolder);
