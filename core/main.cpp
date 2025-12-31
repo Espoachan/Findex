@@ -3,8 +3,7 @@
 
 int main () {
 
-    std::string path = "C:/Users/PC";
-
+    std::string path = "C:\\Users\\PC\\";
     buildIndex(path);
 
     return 0;
