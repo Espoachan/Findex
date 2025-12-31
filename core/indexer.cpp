@@ -23,7 +23,16 @@ void buildIndex(const std::string& rootFolder) {
         f.isDirectory = entry.is_directory();
         index.push_back(f);
 
-        std::cout << "indexed files: " << index.size() + 1 << "\r";
+        std::cout << "Indexed files: " << index.size() + 1 << "\r";
     }
+
+    std::cout << std::endl << "Indexing complete. Total files indexed: " << index.size() << std::endl;
+
+    if (!index.empty()) {
+        std::cout << "Last indexed file: " << index.back().name << "       " << index.back().path << std::endl;
+    } else {
+        std::cout << "There are no files to index." << std::endl;
+    }
+
 
 }
