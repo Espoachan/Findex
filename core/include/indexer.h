@@ -1,18 +1,35 @@
 #pragma once
 
-#include <string>
 #include <vector>
-#include <filesystem>
+#include <string>
+#include <windows.h>
+#include <winioctl.h>
 
-struct fileEntry
-    {   
-        std::string name;
-        std::string path;
-        uintmax_t size;
-        bool isDirectory;
-    };
+struct FileRecord {
+    unsigned long long id;
+    unsigned long long parentId;
+    std::string name;
+    bool isDirectory;
+};
 
-    void indexJob(const std::vector<std::filesystem::path>& folders, std::vector<fileEntry>& out);
-    void buildIndex(const std::string& rootFolder);
-    void saveIndex(const std::vector<fileEntry>& indexToSave);
-    bool loadIndex(std::vector<fileEntry>& indexToLoad);
+class USNIndexer {
+public:
+    USNIndexer();
+    ~USNIndexer();
+
+    // Initialize the handle to the volume (e.g., 'C')
+    bool initVolume(char driveLetter);
+
+    // Create the USN Journal if it doesn't exist
+    bool createUSNJournal();
+
+    // Get the basic journal data (ID, Min/Max range)
+    bool getJournalData(USN_JOURNAL_DATA& data);
+
+    // Scan all files instantly
+    std::vector<FileRecord> getAllFiles();
+
+private:
+    HANDLE hVolume;
+    char driveLetter;
+};

@@ -1,18 +1,15 @@
-#include <iostream>
 #include "indexer.h"
-#include <filesystem>
+#include <iostream>
 
-int main () {
-
-    std::string path = "C:\\";
+int main() {
+    // Requires Administrator privileges!
+    std::cout << "Starting NTFS USN Journal Indexer..." << std::endl;
     
-    // Loading the cached index
-    // In case it doesn't exist we call the function that builds it
-    std::vector<fileEntry> cachedIndex;
-    if (loadIndex(cachedIndex)) {
-    } else {
-        buildIndex(path);
-    }
+    // TODO: Initialize Indexer
+    // USNIndexer indexer;
+    // indexer.init("C:");
 
+    std::cout << "Press Enter to exit...";
+    std::cin.get();
     return 0;
 }
