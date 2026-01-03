@@ -21,7 +21,14 @@ int main () {
         }
     }
 
-    buildIndex(path);
+
+    // Loading the cached index
+    // In case it doesn't exist we call the function that builds it
+    std::vector<fileEntry> cachedIndex;
+    if (loadIndex(cachedIndex)) {
+    } else {
+        buildIndex(path);
+    }
 
     return 0;
 }
