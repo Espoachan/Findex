@@ -12,24 +12,31 @@ struct FileRecord {
     bool isDirectory;
 };
 
+#pragma pack(push, 1)
+struct UsnJournalInfo {
+    DWORDLONG journal_id;
+    USN next_usn;
+};
+#pragma pack(pop)
+
 class USNIndexer {
 public:
     USNIndexer();
     ~USNIndexer();
 
-    // Initialize the handle to the volume (e.g., 'C')
+    USN_JOURNAL_DATA data;
+    HANDLE hVolume;
+    char drive_letter;
+    UsnJournalInfo journal_info;
+
+    bool saveJournalInfo(const UsnJournalInfo& info);
+
     bool initVolume(char driveLetter);
-
-    // Create the USN Journal if it doesn't exist
     bool createUSNJournal();
-
-    // Get the basic journal data (ID, Min/Max range)
     bool getJournalData(USN_JOURNAL_DATA& data);
 
-    // Scan all files instantly
     std::vector<FileRecord> getAllFiles();
 
-private:
-    HANDLE hVolume;
-    char driveLetter;
+private:    
+
 };
