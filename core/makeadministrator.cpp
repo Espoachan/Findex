@@ -3,7 +3,7 @@
 
 bool isAdministrator() {
     BOOL isAdmin = FALSE;
-    PSID adminGroup = NULL;
+    PSID adminGroup = nullptr;
     SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
 
     if (AllocateAndInitializeSid(&NtAuthority, 2,
@@ -12,7 +12,7 @@ bool isAdministrator() {
         0, 0, 0, 0, 0, 0,
         &adminGroup)) {
 
-        CheckTokenMembership(NULL, adminGroup, &isAdmin);
+        CheckTokenMembership(nullptr, adminGroup, &isAdmin);
         FreeSid(adminGroup);
     }
 

@@ -6,9 +6,9 @@
 int main() {
     if(!isAdministrator()) {
         char path[MAX_PATH];
-        GetModuleFileNameA(NULL, path, MAX_PATH);
+        GetModuleFileNameA(nullptr, path, MAX_PATH);
 
-        ShellExecuteA(NULL, "runas", path, NULL, NULL, SW_SHOW);
+        ShellExecuteA(nullptr, "runas", path, nullptr, nullptr, SW_SHOW);
         return 0;
     }
 

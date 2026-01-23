@@ -71,7 +71,7 @@ bool USNIndexer::getJournalData(USN_JOURNAL_DATA& data) {
     if (hVolume == INVALID_HANDLE_VALUE) return false;
 
     DWORD bytes_returned;
-    if (!DeviceIoControl(hVolume, FSCTL_QUERY_USN_JOURNAL, NULL, 0, &data, sizeof(data), &bytes_returned, NULL)) {
+    if (!DeviceIoControl(hVolume, FSCTL_QUERY_USN_JOURNAL, nullptr, 0, &data, sizeof(data), &bytes_returned, nullptr)) {
         std::cerr << "Failed to query USN Journal. Error: " << GetLastError() << std::endl;
         return false;
     }
