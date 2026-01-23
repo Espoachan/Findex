@@ -9,5 +9,7 @@ include_directories(core/include)
 
 add_executable(findex
     core/main.cpp
+    core/appdatapath.cpp
+    core/makeadministrator.cpp
     core/indexer.cpp
 )
