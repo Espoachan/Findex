@@ -89,6 +89,7 @@ bool USNIndexer::loadJournalInfo(UsnJournalInfo& info) {
 
     size_t read = fread(&info, sizeof(UsnJournalInfo), 1, datfile);
     fclose(datfile);
+
     return (read == 1);
 }
 
