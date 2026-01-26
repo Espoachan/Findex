@@ -23,6 +23,8 @@ int main() {
 
     std::cout << "Data saved:" << indexer.journal_info.journal_id << "\n" << indexer.journal_info.next_usn << "\n";
 
+    indexer.getAllFiles();
+    
     std::cout << "Press Enter to exit...";
     std::cin.get();
     return 0;
