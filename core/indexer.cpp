@@ -18,7 +18,7 @@ bool USNIndexer::initVolume(char drive) {
     path += drive;
     path += ":";
 
-    hVolume = CreateFileA(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+    hVolume = CreateFileA(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
 
     if (hVolume == INVALID_HANDLE_VALUE) {
         std::cerr << "Failed to open volume " << drive << ". Error: " << GetLastError() << std::endl;
@@ -35,6 +35,9 @@ bool USNIndexer::createUSNJournal() {
     BOOL journal_exists = DeviceIoControl(hVolume, FSCTL_QUERY_USN_JOURNAL, nullptr, 0, &journalData, sizeof(journalData), &bytes_returned, NULL);
 
     if(journal_exists) {
+        journal_info.journal_id = journalData.UsnJournalID;
+        journal_info.next_usn = journalData.NextUsn;
+        saveJournalInfo(journal_info);
         return true;
     }
 
@@ -49,10 +52,21 @@ bool USNIndexer::createUSNJournal() {
 
     journal_exists = DeviceIoControl(hVolume, FSCTL_CREATE_USN_JOURNAL, &journal_data, sizeof(journal_data), nullptr, 0, &bytes_returned, nullptr);
 
+    if(!journal_exists) {
+        std::cerr << "Failed to create USN journal. Error: " << GetLastError() << std::endl;
+        return false;
+    }
+
+    if(!DeviceIoControl(hVolume, FSCTL_QUERY_USN_JOURNAL, nullptr, 0, &journal_data, sizeof(journal_data), &bytes_returned, nullptr)) {
+        std::cerr << "Failed to query USN journal. Error: " << GetLastError() << std::endl;
+        return false;
+    }
+
     journal_info.journal_id = journalData.UsnJournalID;
     journal_info.next_usn = journalData.NextUsn;
 
     saveJournalInfo(journal_info);
+    return true;
 }
 
 bool USNIndexer::saveJournalInfo(const UsnJournalInfo& info) {
@@ -80,6 +94,61 @@ bool USNIndexer::getJournalData(USN_JOURNAL_DATA& data) {
 
 std::vector<FileRecord> USNIndexer::getAllFiles() {
     std::vector<FileRecord> files;
-    // TODO: Implement FSCTL_ENUM_USN_DATA
+
+    if (hVolume == INVALID_HANDLE_VALUE) return files;
+
+    USN_JOURNAL_DATA journal_data{};
+    if(!getJournalData(journal_data)) return files;
+
+    journal_info.journal_id = journal_data.UsnJournalID;
+    journal_info.next_usn   = journal_data.NextUsn;
+
+    MFT_ENUM_DATA_V0 enum_data = {};
+    enum_data.StartFileReferenceNumber = 0;
+    enum_data.LowUsn = 0;
+    enum_data.HighUsn = journal_info.next_usn;
+
+    DWORD bytes_returned = 0;
+    const DWORD BUFFER_SIZE = 1024 * 1024; // (this is 1 mega byte)
+    auto buffer = std::unique_ptr<BYTE[]>(new BYTE[BUFFER_SIZE]);
+
+    files.reserve(1000000); // testing
+
+    while (true) {
+        BOOL success = DeviceIoControl(hVolume, FSCTL_ENUM_USN_DATA, &enum_data, sizeof(enum_data), buffer.get(), BUFFER_SIZE, &bytes_returned, nullptr); 
+
+        if (!success) {
+            DWORD err = GetLastError();
+            if (err == ERROR_HANDLE_EOF) {
+                break;
+            } else {
+                std::cerr << "FSCTL_ENUM_USN_DATA failed. Error: " << err << std::endl;
+                break;
+            }
+        }
+
+        //FRN stands for File Reference Number
+        USN nextFRN = *(USN*)buffer.get();
+        DWORD offset = sizeof(USN);
+
+        while (offset < bytes_returned) {
+            USN_RECORD* record = (USN_RECORD*)((BYTE*)buffer.get() + offset);
+
+            FileRecord file = {};
+            file.id = record->FileReferenceNumber;
+            file.parentId = record->ParentFileReferenceNumber;
+
+            std::wstring wname(record->FileName, record->FileNameLength / sizeof(WCHAR));
+            file.name = wname;
+            file.isDirectory = (record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+
+            files.push_back(std::move(file));
+
+            offset += record->RecordLength;
+        }
+
+        enum_data.StartFileReferenceNumber = nextFRN;
+    }
+    std::cout << "Indexed " << files.size() << " files/folders\n";
     return files;
 }
