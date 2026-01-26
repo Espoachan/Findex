@@ -46,18 +46,18 @@ bool USNIndexer::createUSNJournal() {
         return false;
     }   
 
-    CREATE_USN_JOURNAL_DATA journal_data = {};
-    journal_data.MaximumSize = 0;
-    journal_data.AllocationDelta = 0;
+    CREATE_USN_JOURNAL_DATA journal_config = {};
+    journal_config.MaximumSize = 0;
+    journal_config.AllocationDelta = 0;
 
-    journal_exists = DeviceIoControl(hVolume, FSCTL_CREATE_USN_JOURNAL, &journal_data, sizeof(journal_data), nullptr, 0, &bytes_returned, nullptr);
+    journal_exists = DeviceIoControl(hVolume, FSCTL_CREATE_USN_JOURNAL, &journal_config, sizeof(journal_config), nullptr, 0, &bytes_returned, nullptr);
 
     if(!journal_exists) {
         std::cerr << "Failed to create USN journal. Error: " << GetLastError() << std::endl;
         return false;
     }
 
-    if(!DeviceIoControl(hVolume, FSCTL_QUERY_USN_JOURNAL, nullptr, 0, &journal_data, sizeof(journal_data), &bytes_returned, nullptr)) {
+    if(!DeviceIoControl(hVolume, FSCTL_QUERY_USN_JOURNAL, nullptr, 0, &journal_config, sizeof(journalData), &bytes_returned, nullptr)) {
         std::cerr << "Failed to query USN journal. Error: " << GetLastError() << std::endl;
         return false;
     }
@@ -65,7 +65,6 @@ bool USNIndexer::createUSNJournal() {
     journal_info.journal_id = journalData.UsnJournalID;
     journal_info.next_usn = journalData.NextUsn;
 
-    // saveJournalInfo(journal_info);
     return true;
 }
 
@@ -109,11 +108,11 @@ std::vector<FileRecord> USNIndexer::getAllFiles() {
 
     if (hVolume == INVALID_HANDLE_VALUE) return files;
 
-    USN_JOURNAL_DATA journal_data{};
-    if(!getJournalData(journal_data)) return files;
+    USN_JOURNAL_DATA journal_config{};
+    if(!getJournalData(journal_config)) return files;
 
-    journal_info.journal_id = journal_data.UsnJournalID;
-    journal_info.next_usn   = journal_data.NextUsn;
+    journal_info.journal_id = journal_config.UsnJournalID;
+    journal_info.next_usn   = journal_config.NextUsn;
 
     MFT_ENUM_DATA_V0 enum_data = {};
     enum_data.StartFileReferenceNumber = 0;
