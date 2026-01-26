@@ -8,7 +8,7 @@
 struct FileRecord {
     unsigned long long id;
     unsigned long long parentId;
-    std::string name;
+    std::wstring name;
     bool isDirectory;
 };
 
