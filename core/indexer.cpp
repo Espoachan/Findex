@@ -37,7 +37,7 @@ bool USNIndexer::createUSNJournal() {
     if(journal_exists) {
         journal_info.journal_id = journalData.UsnJournalID;
         journal_info.next_usn = journalData.NextUsn;
-        saveJournalInfo(journal_info);
+        // saveJournalInfo(journal_info);
         return true;
     }
 
@@ -65,7 +65,7 @@ bool USNIndexer::createUSNJournal() {
     journal_info.journal_id = journalData.UsnJournalID;
     journal_info.next_usn = journalData.NextUsn;
 
-    saveJournalInfo(journal_info);
+    // saveJournalInfo(journal_info);
     return true;
 }
 
@@ -79,6 +79,17 @@ bool USNIndexer::saveJournalInfo(const UsnJournalInfo& info) {
     fclose(datfile);
 
     return (written == 1);
+}
+
+bool USNIndexer::loadJournalInfo(UsnJournalInfo& info) {
+    std::string path = getAppDataPath();
+    path += "journal.dat";
+    FILE* datfile = fopen(path.c_str(), "rb");
+    if (!datfile) return false;
+
+    size_t read = fread(&info, sizeof(UsnJournalInfo), 1, datfile);
+    fclose(datfile);
+    return (read == 1);
 }
 
 bool USNIndexer::getJournalData(USN_JOURNAL_DATA& data) {
