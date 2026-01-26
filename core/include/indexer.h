@@ -30,6 +30,8 @@ public:
     UsnJournalInfo journal_info;
 
     bool saveJournalInfo(const UsnJournalInfo& info);
+    bool loadJournalInfo(UsnJournalInfo& info);
+
 
     bool initVolume(char driveLetter);
     bool createUSNJournal();
