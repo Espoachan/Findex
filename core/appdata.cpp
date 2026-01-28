@@ -1,8 +1,9 @@
 #include <windows.h>
 #include <iostream>
 #include <shlobj.h>
-#include "include/appdatapath.h"
 #include <string>
+
+#include "appdata.hpp"
 
 std::string getAppDataPath() {
     char path[MAX_PATH];

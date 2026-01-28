@@ -1,7 +1,8 @@
-#include "indexer.h"
-#include "appdatapath.h"
 #include <iostream>
-#include "makeadministrator.h"
+
+#include "indexer.hpp"
+#include "appdata.hpp"
+#include "elevate.hpp"
 
 int main() {
     if(!isAdministrator()) {
@@ -18,8 +19,8 @@ int main() {
     USNIndexer indexer;
     indexer.initVolume('C');
 
-    UsnJournalInfo old_info{};
-    
+    UsnJournalInfo old_info{};  
+
     // a true has_old means we already have a jorunal.dat file
     bool has_old = indexer.loadJournalInfo(old_info);
 

@@ -33,6 +33,9 @@ public:
     bool loadJournalInfo(UsnJournalInfo& info);
 
 
+    void incrementalIndex(USN old_usn);
+    void interpretateChanges();
+
     bool initVolume(char driveLetter);
     bool createUSNJournal();
     bool getJournalData(USN_JOURNAL_DATA& data);

@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <shellapi.h>
 
+#include <elevate.hpp>
+
 bool isAdministrator() {
     BOOL isAdmin = FALSE;
     PSID adminGroup = nullptr;

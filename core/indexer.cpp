@@ -1,8 +1,10 @@
-#include "indexer.h"
 #include <iostream>
 #include <string>
 #include <memory>
-#include "appdatapath.h"
+
+#include "indexer.hpp"
+#include "appdata.hpp"
+
 
 USNIndexer::USNIndexer() : hVolume(INVALID_HANDLE_VALUE), drive_letter('C') {}
 
@@ -138,7 +140,7 @@ std::vector<FileRecord> USNIndexer::getAllFiles() {
             }
         }
 
-        //FRN stands for File Reference Number
+        // FRN stands for File Reference Number
         USN nextFRN = *(USN*)buffer.get();
         DWORD offset = sizeof(USN);
 
@@ -162,4 +164,39 @@ std::vector<FileRecord> USNIndexer::getAllFiles() {
     }
     std::cout << "Indexed " << files.size() << " files/folders\n";
     return files;
+}
+
+void USNIndexer::incrementalIndex(USN old_usn) {
+    const DWORD BUFFER_SIZE = 1024 * 1024;
+    auto buffer = std::unique_ptr<BYTE[]>(new BYTE[BUFFER_SIZE]);
+
+    READ_USN_JOURNAL_DATA read_data = {};
+    read_data.StartUsn = old_usn;
+    read_data.ReasonMask = 0xFFFFFFFF;
+    read_data.ReturnOnlyOnClose = FALSE;
+    read_data.Timeout = 0;
+    read_data.BytesToWaitFor = 0;
+    read_data.UsnJournalID = journal_info.journal_id;
+
+    DWORD bytes_returned = 0;
+
+    while (true) {
+        BOOL success = DeviceIoControl(hVolume, FSCTL_READ_USN_JOURNAL, &read_data, sizeof(read_data), buffer.get(), BUFFER_SIZE, &bytes_returned, nullptr);
+        if (!success) {
+            DWORD err = GetLastError();
+            if (err == ERROR_HANDLE_EOF) break;
+            
+            std::cerr << "FSCTL_READ_USN_JOURNAL failed: " << err << "\n";
+            break;
+        }
+    
+        DWORD offset = sizeof(USN);
+        while (offset < bytes_returned) {
+            USN_RECORD* record = (USN_RECORD*)((BYTE*)buffer.get() + offset);
+
+            offset += record->RecordLength;
+        }
+
+        read_data.StartUsn = *(USN*)buffer.get();
+    }
 }
