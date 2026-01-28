@@ -12,4 +12,5 @@ add_executable(findex
     core/appdata.cpp
     core/elevate.cpp
     core/indexer.cpp
+    core/findex.cpp
 )
