@@ -32,12 +32,12 @@ bool USNIndexer::initVolume(char drive) {
 }
 
 bool USNIndexer::createUSNJournal() {
-    USN_JOURNAL_DATA journalData = {};
+    USN_JOURNAL_DATA journal_data = {};
     DWORD bytes_returned = 0;
-    BOOL journal_exists = DeviceIoControl(hVolume, FSCTL_QUERY_USN_JOURNAL, nullptr, 0, &journalData, sizeof(journalData), &bytes_returned, NULL);
+    BOOL journal_exists = DeviceIoControl(hVolume, FSCTL_QUERY_USN_JOURNAL, nullptr, 0, &journal_data, sizeof(journal_data), &bytes_returned, NULL);
 
     if(journal_exists) {
-        journal_info.journal_id = journalData.UsnJournalID;
+        journal_info.journal_id = journal_data.UsnJournalID;
         journal_info.next_usn = journalData.NextUsn;
         // saveJournalInfo(journal_info);
         return true;
@@ -59,13 +59,13 @@ bool USNIndexer::createUSNJournal() {
         return false;
     }
 
-    if(!DeviceIoControl(hVolume, FSCTL_QUERY_USN_JOURNAL, nullptr, 0, &journal_config, sizeof(journalData), &bytes_returned, nullptr)) {
+    if(!DeviceIoControl(hVolume, FSCTL_QUERY_USN_JOURNAL, nullptr, 0, &journal_config, sizeof(journal_data), &bytes_returned, nullptr)) {
         std::cerr << "Failed to query USN journal. Error: " << GetLastError() << std::endl;
         return false;
     }
 
-    journal_info.journal_id = journalData.UsnJournalID;
-    journal_info.next_usn = journalData.NextUsn;
+    journal_info.journal_id = journal_data.UsnJournalID;
+    journal_info.next_usn = journal_data.NextUsn;
 
     return true;
 }
@@ -105,7 +105,9 @@ bool USNIndexer::getJournalData(USN_JOURNAL_DATA& data) {
     return true;
 }
 
-std::vector<FileRecord> USNIndexer::getAllFiles() {
+std::vector<FileRecord> USNIndexer::indexFiles() {
+    std::cout << "this is working fine :)"; // debug
+
     std::vector<FileRecord> files;
 
     if (hVolume == INVALID_HANDLE_VALUE) return files;

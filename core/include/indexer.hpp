@@ -4,12 +4,13 @@
 #include <string>
 #include <windows.h>
 #include <winioctl.h>
+#include <unordered_map>
 
 struct FileRecord {
-    unsigned long long id;
-    unsigned long long parentId;
+    uint64_t frn; // id is the file reference number
+    uint64_t parent_frn;
     std::wstring name;
-    bool isDirectory;
+    bool is_directory;
 };
 
 #pragma pack(push, 1)
@@ -36,11 +37,13 @@ public:
     void incrementalIndex(USN old_usn);
     void interpretateChanges();
 
-    bool initVolume(char driveLetter);
+    bool initVolume(char drive_letter);
     bool createUSNJournal();
     bool getJournalData(USN_JOURNAL_DATA& data);
 
-    std::vector<FileRecord> getAllFiles();
+    std::vector<FileRecord> indexFiles();
+
+    std::unordered_map<uint64_t, FileRecord> index_map;
 
 private:    
 

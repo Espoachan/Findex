@@ -1,4 +1,3 @@
-#include "indexer.hpp"
 #include "appdata.hpp"
 #include "findex.hpp"
 #include "elevate.hpp"
@@ -20,12 +19,11 @@ bool Findex::run() {
     std::cout << "Starting NTFS USN Journal Indexer..." << std::endl;
     
     getAppDataPath();
-    USNIndexer indexer;
     indexer.initVolume('C');
 
     UsnJournalInfo old_info{};  
 
-    // a true has_old means we already have a jorunal.dat file
+    // has_old as in we have a journal.dat file (old journal)
     bool has_old = indexer.loadJournalInfo(old_info);
 
     indexer.createUSNJournal();
@@ -44,13 +42,13 @@ bool Findex::run() {
     }
 
     if (fullIndex) {
-        indexer.getAllFiles();
+        indexer.indexFiles(); 
     } else {
         // TODO: implement incremental indexing
     }
 
     indexer.journal_info.journal_id = current_data.UsnJournalID;
-    indexer.journal_info.next_usn   = current_data.NextUsn;
+    indexer.journal_info.next_usn = current_data.NextUsn;
     indexer.saveJournalInfo(indexer.journal_info);
 
     std::cout << "Data saved:" << indexer.journal_info.journal_id << "\n" << indexer.journal_info.next_usn << "\n";
