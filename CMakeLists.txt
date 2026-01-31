@@ -14,4 +14,5 @@ add_executable(findex
     core/indexer.cpp
     core/findex.cpp
     core/count_volumes.cpp
+    core/serializer.cpp
 )
