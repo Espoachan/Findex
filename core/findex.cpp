@@ -43,6 +43,7 @@ bool Findex::run(char drive_letter) {
 
     if (fullIndex) {
         indexer.indexFiles(); 
+        // indexer.incrementalIndex(0);
     } else {
         std::cout << "found a compatible journal, adding new files\n";
         indexer.incrementalIndex(old_info.next_usn);

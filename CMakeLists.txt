@@ -13,4 +13,5 @@ add_executable(findex
     core/elevate.cpp
     core/indexer.cpp
     core/findex.cpp
+    core/count_volumes.cpp
 )

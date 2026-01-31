@@ -210,6 +210,7 @@ void USNIndexer::incrementalIndex(USN old_usn) {
 
 void USNIndexer::updateIndexAfterNewData(USN_RECORD* record) {
     USN reason = record->Reason;
+    if (!(record->Reason & USN_REASON_CLOSE)) return;
     if (reason & USN_REASON_FILE_DELETE) {
         index_map.erase(record->FileReferenceNumber);
 
