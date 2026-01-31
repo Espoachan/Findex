@@ -6,7 +6,7 @@
 #include "appdata.hpp"
 
 
-USNIndexer::USNIndexer() : hVolume(INVALID_HANDLE_VALUE), drive_letter('C') {}
+USNIndexer::USNIndexer() : hVolume(INVALID_HANDLE_VALUE)/*, drive_letter('C')*/ {}
 
 USNIndexer::~USNIndexer() {
     if (hVolume != INVALID_HANDLE_VALUE) {
@@ -38,7 +38,7 @@ bool USNIndexer::createUSNJournal() {
 
     if(journal_exists) {
         journal_info.journal_id = journal_data.UsnJournalID;
-        journal_info.next_usn = journalData.NextUsn;
+        journal_info.next_usn = journal_data.NextUsn;
         // saveJournalInfo(journal_info);
         return true;
     }
@@ -105,15 +105,24 @@ bool USNIndexer::getJournalData(USN_JOURNAL_DATA& data) {
     return true;
 }
 
-std::vector<FileRecord> USNIndexer::indexFiles() {
-    std::cout << "this is working fine :)"; // debug
+FileRecord USNIndexer::createFileRecordFromUSNRecord(USN_RECORD* record) {
+    FileRecord file = {};
+    file.frn = record->FileReferenceNumber;
+    file.parent_frn = record->ParentFileReferenceNumber;
 
-    std::vector<FileRecord> files;
+    file.name = std::wstring(record->FileName, record->FileNameLength / sizeof(WCHAR));
+    file.is_directory = (record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 
-    if (hVolume == INVALID_HANDLE_VALUE) return files;
+    return file;
+}
+
+void USNIndexer::indexFiles() {    
+    std::cout << "this is working fine :) \n"; // debug
+
+    if (hVolume == INVALID_HANDLE_VALUE) return;
 
     USN_JOURNAL_DATA journal_config{};
-    if(!getJournalData(journal_config)) return files;
+    if(!getJournalData(journal_config)) return;
 
     journal_info.journal_id = journal_config.UsnJournalID;
     journal_info.next_usn   = journal_config.NextUsn;
@@ -126,8 +135,6 @@ std::vector<FileRecord> USNIndexer::indexFiles() {
     DWORD bytes_returned = 0;
     const DWORD BUFFER_SIZE = 1024 * 1024; // (this is 1 mega byte)
     auto buffer = std::unique_ptr<BYTE[]>(new BYTE[BUFFER_SIZE]);
-
-    files.reserve(1000000); // testing
 
     while (true) {
         BOOL success = DeviceIoControl(hVolume, FSCTL_ENUM_USN_DATA, &enum_data, sizeof(enum_data), buffer.get(), BUFFER_SIZE, &bytes_returned, nullptr); 
@@ -150,29 +157,27 @@ std::vector<FileRecord> USNIndexer::indexFiles() {
             USN_RECORD* record = (USN_RECORD*)((BYTE*)buffer.get() + offset);
 
             FileRecord file = {};
-            file.id = record->FileReferenceNumber;
-            file.parentId = record->ParentFileReferenceNumber;
+            file.frn = record->FileReferenceNumber;
+            file.parent_frn = record->ParentFileReferenceNumber;
 
-            std::wstring wname(record->FileName, record->FileNameLength / sizeof(WCHAR));
-            file.name = wname;
-            file.isDirectory = (record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+            file.name = std::wstring(record->FileName, record->FileNameLength / sizeof(WCHAR));
+            file.is_directory = (record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 
-            files.push_back(std::move(file));
+            index_map[file.frn] = file;
 
             offset += record->RecordLength;
         }
 
         enum_data.StartFileReferenceNumber = nextFRN;
     }
-    std::cout << "Indexed " << files.size() << " files/folders\n";
-    return files;
+    std::cout << "Indexed " << index_map.size() << " files/folders\n";
 }
 
 void USNIndexer::incrementalIndex(USN old_usn) {
     const DWORD BUFFER_SIZE = 1024 * 1024;
     auto buffer = std::unique_ptr<BYTE[]>(new BYTE[BUFFER_SIZE]);
-
-    READ_USN_JOURNAL_DATA read_data = {};
+    
+    READ_USN_JOURNAL_DATA_V0 read_data = {};
     read_data.StartUsn = old_usn;
     read_data.ReasonMask = 0xFFFFFFFF;
     read_data.ReturnOnlyOnClose = FALSE;
@@ -195,10 +200,32 @@ void USNIndexer::incrementalIndex(USN old_usn) {
         DWORD offset = sizeof(USN);
         while (offset < bytes_returned) {
             USN_RECORD* record = (USN_RECORD*)((BYTE*)buffer.get() + offset);
-
+            updateIndexAfterNewData(record);
             offset += record->RecordLength;
         }
 
         read_data.StartUsn = *(USN*)buffer.get();
+    }
+}
+
+void USNIndexer::updateIndexAfterNewData(USN_RECORD* record) {
+    USN reason = record->Reason;
+    if (reason & USN_REASON_FILE_DELETE) {
+        index_map.erase(record->FileReferenceNumber);
+
+    } else if (reason & USN_REASON_FILE_CREATE) {
+        FileRecord file = createFileRecordFromUSNRecord(record);
+        index_map[file.frn] = file;
+        std::wcout << file.name << "\n"; // debug
+
+    } else if (reason & USN_REASON_RENAME_NEW_NAME) {
+        auto it = index_map.find(record->FileReferenceNumber);
+        if (it != index_map.end()) {
+            it->second.name = std::wstring(record->FileName, record->FileNameLength / sizeof(WCHAR));
+            it->second.parent_frn = record->ParentFileReferenceNumber;
+        } else {
+            FileRecord file = createFileRecordFromUSNRecord(record);
+            index_map[file.frn] = file; 
+        }
     }
 }

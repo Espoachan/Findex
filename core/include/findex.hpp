@@ -5,7 +5,7 @@
 class Findex {
 public:
     void elevate();
-    bool run();   
+    bool run(char drive_letter);   
 
 private:
     USNIndexer indexer;

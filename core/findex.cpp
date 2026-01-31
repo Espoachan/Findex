@@ -15,11 +15,11 @@ void Findex::elevate() {
     }
 }
 
-bool Findex::run() {
+bool Findex::run(char drive_letter) {
     std::cout << "Starting NTFS USN Journal Indexer..." << std::endl;
     
     getAppDataPath();
-    indexer.initVolume('C');
+    indexer.initVolume(drive_letter);
 
     UsnJournalInfo old_info{};  
 
@@ -44,7 +44,8 @@ bool Findex::run() {
     if (fullIndex) {
         indexer.indexFiles(); 
     } else {
-        // TODO: implement incremental indexing
+        std::cout << "found a compatible journal, adding new files\n";
+        indexer.incrementalIndex(old_info.next_usn);
     }
 
     indexer.journal_info.journal_id = current_data.UsnJournalID;

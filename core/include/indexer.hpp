@@ -25,26 +25,25 @@ public:
     USNIndexer();
     ~USNIndexer();
 
-    USN_JOURNAL_DATA data;
     HANDLE hVolume;
     char drive_letter;
-    UsnJournalInfo journal_info;
+    USN_JOURNAL_DATA data{};
+    UsnJournalInfo journal_info{};
 
     bool saveJournalInfo(const UsnJournalInfo& info);
     bool loadJournalInfo(UsnJournalInfo& info);
 
-
     void incrementalIndex(USN old_usn);
-    void interpretateChanges();
+    void updateIndexAfterNewData(USN_RECORD* record);
+    FileRecord createFileRecordFromUSNRecord(USN_RECORD* record);
 
     bool initVolume(char drive_letter);
     bool createUSNJournal();
     bool getJournalData(USN_JOURNAL_DATA& data);
 
-    std::vector<FileRecord> indexFiles();
+    void indexFiles();
 
     std::unordered_map<uint64_t, FileRecord> index_map;
 
 private:    
-
 };
