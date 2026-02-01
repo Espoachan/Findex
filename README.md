@@ -11,9 +11,7 @@ Findex is a free, open-source, and fast tool for searching files on your compute
 
 
 - **Operating System:** 64-bit Windows
-- **C++11 compatible compiler**
-- **Tested with:**
-**MSVC 19.50**
+- **C++11 compatible compiler (only tested with MSVC 19.50)**
 - **Build Generator:** CMake ≥ 3.12
 - **Build System:** MSBuild or Ninja
 
