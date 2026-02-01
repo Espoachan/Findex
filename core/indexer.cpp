@@ -5,7 +5,6 @@
 #include "indexer.hpp"
 #include "appdata.hpp"
 
-
 USNIndexer::USNIndexer() : hVolume(INVALID_HANDLE_VALUE)/*, drive_letter('C')*/ {}
 
 USNIndexer::~USNIndexer() {
@@ -217,7 +216,7 @@ void USNIndexer::updateIndexAfterNewData(USN_RECORD* record) {
     } else if (reason & USN_REASON_FILE_CREATE) {
         FileRecord file = createFileRecordFromUSNRecord(record);
         index_map[file.frn] = file;
-        std::wcout << file.name << "\n"; // debug
+        // std::wcout << file.name << "\n"; // debug
 
     } else if (reason & USN_REASON_RENAME_NEW_NAME) {
         auto it = index_map.find(record->FileReferenceNumber);

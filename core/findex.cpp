@@ -53,9 +53,11 @@ bool Findex::run(char drive_letter) {
     indexer.journal_info.next_usn = current_data.NextUsn;
     indexer.saveJournalInfo(indexer.journal_info);
 
-    std::cout << "Data saved:" << indexer.journal_info.journal_id << "\n" << indexer.journal_info.next_usn << "\n";
+    std::cout << "Data saved: \n\n" << "Journal id: " << indexer.journal_info.journal_id << "\n" << "Next USN: " << indexer.journal_info.next_usn << "\n";
 
     std::cout << "Press Enter to exit...";
     std::cin.get();
+
+    return true;
 }
 
