@@ -199,7 +199,7 @@ void USNIndexer::incrementalIndex(USN old_usn) {
         DWORD offset = sizeof(USN);
         while (offset < bytes_returned) {
             USN_RECORD* record = (USN_RECORD*)((BYTE*)buffer.get() + offset);
-            file_name_wstring = updateIndexAfterNewData(record);
+            updateIndexAfterNewData(record);
             offset += record->RecordLength;
         }
 
@@ -207,18 +207,16 @@ void USNIndexer::incrementalIndex(USN old_usn) {
     }
 }
 
-std::wstring USNIndexer::updateIndexAfterNewData(USN_RECORD* record) {
+void USNIndexer::updateIndexAfterNewData(USN_RECORD* record) {
     USN reason = record->Reason;
-    if (!(record->Reason & USN_REASON_CLOSE)) return error_text_wstring;
+    if (!(record->Reason & USN_REASON_CLOSE)) return;
     if (reason & USN_REASON_FILE_DELETE) {
         index_map.erase(record->FileReferenceNumber);
 
     } else if (reason & USN_REASON_FILE_CREATE) {
         FileRecord file = createFileRecordFromUSNRecord(record);
         index_map[file.frn] = file;
-        return file.name;
         // std::wcout << file.name << "\n"; // debug
-
     } else if (reason & USN_REASON_RENAME_NEW_NAME) {
         auto it = index_map.find(record->FileReferenceNumber);
         if (it != index_map.end()) {

@@ -6,6 +6,8 @@
 class QLabel;
 class QString;
 class USNIndexer;
+class QVBoxLayout;
+class QWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -15,11 +17,8 @@ public:
     explicit MainWindow(USNIndexer& indexer, QWidget* parent = nullptr);
     ~MainWindow();
 
-    void updateLabels();
-
 private:
     USNIndexer& indexer;
-    QLabel* file_name_label;
 };
 
 #endif

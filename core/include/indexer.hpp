@@ -34,13 +34,8 @@ public:
     bool loadJournalInfo(UsnJournalInfo& info);
 
     void incrementalIndex(USN old_usn);
-    std::wstring updateIndexAfterNewData(USN_RECORD* record);
+    void updateIndexAfterNewData(USN_RECORD* record);
     FileRecord createFileRecordFromUSNRecord(USN_RECORD* record);
-
-    // testing things
-    std::wstring file_name_wstring;
-    std::wstring error_text_wstring = L"ERROR";
-
 
     bool initVolume(char drive_letter);
     bool createUSNJournal();

@@ -18,10 +18,10 @@ target_include_directories(findex_core PUBLIC core/include)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 set(GUI_HEADERS
-    gui/MainWindow.h
+    gui/mainwindow.h
 )
 set(GUI_SOURCES
-    gui/MainWindow.cpp
+    gui/mainwindow.cpp
     gui/main.cpp
 )
 

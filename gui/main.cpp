@@ -1,5 +1,5 @@
 #include <QApplication>
-#include "MainWindow.h" 
+#include "mainwindow.h" 
 #include "findex.hpp"
 
 int main(int argc, char *argv[])
@@ -12,7 +12,6 @@ int main(int argc, char *argv[])
 
     MainWindow w(findex.indexer);
     w.show();
-
 
     return app.exec();
 }

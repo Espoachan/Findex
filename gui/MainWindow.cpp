@@ -1,15 +1,18 @@
-#include "MainWindow.h"
+#include "mainwindow.h"
 #include "indexer.hpp"
 #include <QLabel>
 #include <QString>
+#include <QVBoxLayout>
+#include <QWidget>
 
-MainWindow::MainWindow(USNIndexer& indexer, QWidget* parent) : QMainWindow(parent), indexer(indexer)
-{
-    file_name_label = new QLabel(this);
-    file_name_label->setGeometry(10, 10, 200, 30);
-}
-void MainWindow::updateLabels() {
-    QString qstr_file_name = QString::fromStdWString(indexer.file_name_wstring);
-    file_name_label->setText(qstr_file_name);
+MainWindow::MainWindow(USNIndexer& indexer, QWidget* parent) : QMainWindow(parent), indexer(indexer) {
+    this->resize(800, 600);
+    this->showMaximized();
+
+    QLabel *label = new QLabel("Yahallo!");
+
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->addWidget(label);
+    this->setLayout(layout);
 }
 MainWindow::~MainWindow() {}
