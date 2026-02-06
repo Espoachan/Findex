@@ -6,10 +6,12 @@
 #include <winioctl.h>
 #include <unordered_map>
 
+#include "wstring_to_utf8.hpp"
+
 struct FileRecord {
     uint64_t frn; // id is the file reference number
     uint64_t parent_frn;
-    std::wstring name;
+    std::string name;
     bool is_directory;
 };
 
