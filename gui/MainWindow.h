@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 
+class QThread;
+class Worker;
+class QTimer;
 class QLabel;
 class QString;
 class USNIndexer;
@@ -18,7 +21,13 @@ public:
     ~MainWindow();
 
 private:
+    void setupWorker();
+
     USNIndexer& indexer;
+    
+    QThread* thread;
+    Worker* worker;
+    QTimer* timer;
 };
 
 #endif

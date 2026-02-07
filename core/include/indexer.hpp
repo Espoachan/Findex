@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <winioctl.h>
 #include <unordered_map>
+#include <mutex>
 
 #include "wstring_to_utf8.hpp"
 
@@ -31,6 +32,8 @@ public:
     char drive_letter;
     USN_JOURNAL_DATA data{};
     UsnJournalInfo journal_info{};
+
+    std::mutex dataMutex;
 
     bool saveJournalInfo(const UsnJournalInfo& info);
     bool loadJournalInfo(UsnJournalInfo& info);

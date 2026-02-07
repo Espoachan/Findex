@@ -11,7 +11,7 @@ void Findex::elevate() {
         GetModuleFileNameA(nullptr, path, MAX_PATH);
 
         ShellExecuteA(nullptr, "runas", path, nullptr, nullptr, SW_SHOW);
-        return;
+        exit(0);
     }
 }
 

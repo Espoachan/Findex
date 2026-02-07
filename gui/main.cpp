@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
 {
     Findex findex;
     findex.elevate();
-    findex.run('C');
+    // findex.run('C');
 
     QApplication app(argc, argv);
 

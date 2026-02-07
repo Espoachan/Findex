@@ -152,20 +152,24 @@ void USNIndexer::indexFiles() {
         USN nextFRN = *(USN*)buffer.get();
         DWORD offset = sizeof(USN);
 
-        while (offset < bytes_returned) {
-            USN_RECORD* record = (USN_RECORD*)((BYTE*)buffer.get() + offset);
+        
+        
+        {
+            std::lock_guard<std::mutex> lock(dataMutex);
+            while (offset < bytes_returned) {
+                USN_RECORD* record = (USN_RECORD*)((BYTE*)buffer.get() + offset);
 
-            FileRecord file = {};
-            file.frn = record->FileReferenceNumber;
-            file.parent_frn = record->ParentFileReferenceNumber;
+                FileRecord file = {};
+                file.frn = record->FileReferenceNumber;
+                file.parent_frn = record->ParentFileReferenceNumber;
 
-            file.name = wstringToUtf8(record->FileName, record->FileNameLength / 2);
-            file.is_directory = (record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-            index_map[file.frn] = file;
+                file.name = wstringToUtf8(record->FileName, record->FileNameLength / 2);
+                file.is_directory = (record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+                index_map[file.frn] = file;
 
-            offset += record->RecordLength;
+                offset += record->RecordLength;
+            }
         }
-
         enum_data.StartFileReferenceNumber = nextFRN;
     }
     std::cout << "Indexed " << index_map.size() << " files/folders\n";
@@ -196,10 +200,14 @@ void USNIndexer::incrementalIndex(USN old_usn) {
         }
     
         DWORD offset = sizeof(USN);
-        while (offset < bytes_returned) {
-            USN_RECORD* record = (USN_RECORD*)((BYTE*)buffer.get() + offset);
-            updateIndexAfterNewData(record);
-            offset += record->RecordLength;
+
+        {
+            std::lock_guard<std::mutex> lock(dataMutex);
+            while (offset < bytes_returned) {
+                USN_RECORD* record = (USN_RECORD*)((BYTE*)buffer.get() + offset);
+                updateIndexAfterNewData(record);
+                offset += record->RecordLength;
+            }
         }
 
         read_data.StartUsn = *(USN*)buffer.get();

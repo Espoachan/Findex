@@ -20,6 +20,7 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 set(GUI_HEADERS
     gui/mainwindow.h
+    gui/Worker.h
 )
 set(GUI_SOURCES
     gui/mainwindow.cpp
