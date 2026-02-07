@@ -11,6 +11,7 @@ add_library(findex_core STATIC
     core/indexer.cpp
     core/findex.cpp
     core/count_volumes.cpp
+    core/wstring_to_utf8.cpp
 )
 
 target_include_directories(findex_core PUBLIC core/include)

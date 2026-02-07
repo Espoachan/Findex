@@ -109,7 +109,7 @@ FileRecord USNIndexer::createFileRecordFromUSNRecord(USN_RECORD* record) {
     file.frn = record->FileReferenceNumber;
     file.parent_frn = record->ParentFileReferenceNumber;
 
-    file.name = std::wstring(record->FileName, record->FileNameLength / sizeof(WCHAR));
+    file.name = wstringToUtf8(record->FileName, record->FileNameLength / 2);
     file.is_directory = (record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 
     return file;
@@ -159,9 +159,8 @@ void USNIndexer::indexFiles() {
             file.frn = record->FileReferenceNumber;
             file.parent_frn = record->ParentFileReferenceNumber;
 
-            file.name = std::wstring(record->FileName, record->FileNameLength / sizeof(WCHAR));
+            file.name = wstringToUtf8(record->FileName, record->FileNameLength / 2);
             file.is_directory = (record->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-
             index_map[file.frn] = file;
 
             offset += record->RecordLength;
@@ -216,11 +215,12 @@ void USNIndexer::updateIndexAfterNewData(USN_RECORD* record) {
     } else if (reason & USN_REASON_FILE_CREATE) {
         FileRecord file = createFileRecordFromUSNRecord(record);
         index_map[file.frn] = file;
-        // std::wcout << file.name << "\n"; // debug
+        // std::cout << file.name << "\n"; // debug
+
     } else if (reason & USN_REASON_RENAME_NEW_NAME) {
         auto it = index_map.find(record->FileReferenceNumber);
         if (it != index_map.end()) {
-            it->second.name = std::wstring(record->FileName, record->FileNameLength / sizeof(WCHAR));
+            it->second.name = wstringToUtf8(record->FileName, record->FileNameLength / 2);
             it->second.parent_frn = record->ParentFileReferenceNumber;
         } else {
             FileRecord file = createFileRecordFromUSNRecord(record);
