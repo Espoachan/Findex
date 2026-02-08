@@ -11,6 +11,7 @@ class QString;
 class USNIndexer;
 class QVBoxLayout;
 class QWidget;
+class QListWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -22,6 +23,9 @@ public:
 
 private:
     void setupWorker();
+
+    void applyQSS();
+    std::set<QString> in_list_items;
 
     USNIndexer& indexer;
     
