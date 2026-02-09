@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <functional>
 #include <mutex>
+#include <filesystem>
 
 #include "wstring_to_utf8.hpp"
 
@@ -16,6 +17,7 @@ struct FileRecord {
     std::string name;
     std::string old_name = "";
     bool is_directory;
+    std::string path;
 };
 
 #pragma pack(push, 1)
@@ -36,6 +38,9 @@ public:
     UsnJournalInfo journal_info{};
 
     std::mutex dataMutex;
+
+    std::string buildFilePath(FileRecord& file, std::unordered_map<uint64_t, FileRecord>& index_map);
+    std::string resolvePathByFRN(uint64_t frn);
 
     bool saveJournalInfo(const UsnJournalInfo& info);
     bool loadJournalInfo(UsnJournalInfo& info);

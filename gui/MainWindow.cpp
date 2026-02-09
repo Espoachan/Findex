@@ -58,7 +58,7 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
             for (const auto& it : indexer.index_map) {
                 auto& GUI_file_record = it.second;
 
-                QString file_entry_list_text = QString::fromStdString(GUI_file_record.name) + "                " + QString::fromStdString(GUI_file_record.old_name);
+                QString file_entry_list_text = QString::fromStdString(GUI_file_record.name) + "                " + QString::fromStdString(GUI_file_record.path);
                 /*
                 QString name = QString::fromStdString(it.second.name);
                 uint64_t frn = it.second.frn;

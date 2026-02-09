@@ -172,6 +172,10 @@ void USNIndexer::indexFiles() {
         }
         enum_data.StartFileReferenceNumber = nextFRN;
     }
+
+    for (auto& it : index_map) {
+        buildFilePath(it.second, index_map);
+    }
     std::cout << "Indexed " << index_map.size() << " files/folders\n";
 }
 
@@ -217,6 +221,7 @@ void USNIndexer::incrementalIndex(USN old_usn) {
 void USNIndexer::updateIndexAfterNewData(USN_RECORD* record) {
     USN reason = record->Reason;
     if (!(record->Reason & USN_REASON_CLOSE)) return;
+
     if (reason & USN_REASON_FILE_DELETE) {
         index_map.erase(record->FileReferenceNumber);
         uint64_t removed_file_frn = record->FileReferenceNumber;
@@ -229,8 +234,9 @@ void USNIndexer::updateIndexAfterNewData(USN_RECORD* record) {
     } else if (reason & USN_REASON_FILE_CREATE) {
         FileRecord file = createFileRecordFromUSNRecord(record);
         index_map[file.frn] = file;
-        // std::cout << file.name << "\n"; // debug
+        buildFilePath(index_map[file.frn], index_map);
 
+        // std::cout << file.name << "\n"; // debug
     }
     else if (reason & USN_REASON_RENAME_OLD_NAME) {
         // std::wstring w_old_name((WCHAR*)((BYTE*)record + record->FileNameOffset), record->FileNameLength / 2 );
@@ -238,14 +244,92 @@ void USNIndexer::updateIndexAfterNewData(USN_RECORD* record) {
         if (it != index_map.end()) {
             it->second.old_name = wstringToUtf8(record->FileName, record->FileNameLength / 2);
         }
+        
     } else if (reason & USN_REASON_RENAME_NEW_NAME) {
         auto it = index_map.find(record->FileReferenceNumber);
         if (it != index_map.end()) {
             it->second.name = wstringToUtf8(record->FileName, record->FileNameLength / 2);
             it->second.parent_frn = record->ParentFileReferenceNumber;
+            it->second.path = "";
+            buildFilePath(it->second, index_map);
         } else {
             FileRecord file = createFileRecordFromUSNRecord(record);
             index_map[file.frn] = file; 
+            buildFilePath(index_map[file.frn], index_map);
         }
     }
+}
+
+std::string USNIndexer::resolvePathByFRN(uint64_t frn) {
+    HANDLE h_file;
+    FILE_ID_DESCRIPTOR fid_desc;
+    fid_desc.dwSize = sizeof(fid_desc);
+    fid_desc.Type = FileIdType;
+    fid_desc.FileId.QuadPart = frn;
+
+    h_file = OpenFileById(hVolume, &fid_desc, 0, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, FILE_FLAG_BACKUP_SEMANTICS);
+    
+    if (h_file == INVALID_HANDLE_VALUE) return "";
+
+    char path_buf[MAX_PATH];
+    DWORD len = GetFinalPathNameByHandleA(h_file, path_buf, MAX_PATH, VOLUME_NAME_DOS);
+    CloseHandle(h_file);
+
+    if (len == 0 || len >= MAX_PATH) return "";
+
+    std::string s_path(path_buf);
+    if (s_path.substr(0, 4) == "\\\\?\\") {
+        s_path = s_path.substr(4);
+    }
+    return s_path;
+}
+
+std::string USNIndexer::buildFilePath(FileRecord& file, std::unordered_map<uint64_t, FileRecord>& index_map) {
+    if (!file.path.empty()) return file.path;
+
+    std::string root_path = std::string(1, drive_letter) + ":\\";
+
+    auto it = index_map.find(file.parent_frn);
+
+    if (it == index_map.end() || it->second.frn == file.frn) {
+        if (file.name == ".") {
+            file.path = root_path;
+            return file.path;
+        }
+
+        if (it == index_map.end() && file.parent_frn != 0) {
+            std::string parent_path = resolvePathByFRN(file.parent_frn);
+            if (!parent_path.empty()) {
+                FileRecord parent_record;
+                parent_record.frn = file.parent_frn;
+                parent_record.path = parent_path;
+                parent_record.is_directory = true;
+                parent_record.name = std::filesystem::path(parent_path).filename().string();
+                
+                index_map[file.parent_frn] = parent_record;
+
+                if (parent_path.back() != '\\') {
+                    file.path = parent_path + "\\" + file.name;
+                } else {
+                    file.path = parent_path + file.name;
+                }
+                return file.path;
+            }
+        }
+        
+        if (file.name != ".") {
+             file.path = root_path + file.name;
+        }
+        return file.path;
+    }
+
+    std::string parent_path = buildFilePath(it->second, index_map);
+
+    if (parent_path.back() != '\\') {
+        file.path = parent_path + "\\" + file.name;
+    } else {
+        file.path = parent_path + file.name;
+    }
+
+    return file.path;
 }
