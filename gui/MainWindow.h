@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <functional>
+#include <QListWidgetItem>
 
 class QThread;
 class Worker;
@@ -21,11 +23,14 @@ public:
     explicit MainWindow(USNIndexer& indexer, QWidget* parent = nullptr);
     ~MainWindow();
 
+    // void removeItemFromList();
+
 private:
     void setupWorker();
 
     void applyQSS();
-    std::set<QString> in_list_items;
+    std::set<uint64_t> in_list_items;
+    std::unordered_map<uint64_t, QListWidgetItem*> gui_map;
 
     USNIndexer& indexer;
     

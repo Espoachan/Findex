@@ -219,12 +219,25 @@ void USNIndexer::updateIndexAfterNewData(USN_RECORD* record) {
     if (!(record->Reason & USN_REASON_CLOSE)) return;
     if (reason & USN_REASON_FILE_DELETE) {
         index_map.erase(record->FileReferenceNumber);
+        uint64_t removed_file_frn = record->FileReferenceNumber;
+
+        if (onFileRemoved) {
+            onFileRemoved(removed_file_frn);
+        }
+
 
     } else if (reason & USN_REASON_FILE_CREATE) {
         FileRecord file = createFileRecordFromUSNRecord(record);
         index_map[file.frn] = file;
         // std::cout << file.name << "\n"; // debug
 
+    }
+    else if (reason & USN_REASON_RENAME_OLD_NAME) {
+        // std::wstring w_old_name((WCHAR*)((BYTE*)record + record->FileNameOffset), record->FileNameLength / 2 );
+        auto it = index_map.find(record->FileReferenceNumber);
+        if (it != index_map.end()) {
+            it->second.old_name = wstringToUtf8(record->FileName, record->FileNameLength / 2);
+        }
     } else if (reason & USN_REASON_RENAME_NEW_NAME) {
         auto it = index_map.find(record->FileReferenceNumber);
         if (it != index_map.end()) {
