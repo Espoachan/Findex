@@ -3,7 +3,9 @@
 #include "Worker.h"
 
 #include <QThread>
+#include <QDesktopServices>
 #include <QLabel>
+#include <QUrl>
 #include <QString>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -26,29 +28,20 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
     QToolButton *button = new QToolButton();
     button->setText("Do nothing");
     
-    // files_list->addItem(label->text());
-    
     layout->addWidget(button);
-    layout->addWidget(label);
+    // layout->addWidget(label);
     layout->addWidget(files_list);
 
-    /*
-    for (int i = 0; i < 10; i++) {
-        files_list->addItem("Yahallo " + QString::number(i));
-    }
-    */
+    status_bar->addWidget(label);
 
     setWindowTitle("Findex");
     resize(800, 600);
-    showMaximized();
 
     setupWorker();
-
 
     timer = new QTimer(this);
 
     connect(timer, &QTimer::timeout, this, [this, files_list]() {
-        // qDebug() << "timer running" << indexer.index_map.size();
         
         std::lock_guard<std::mutex> lock(indexer.dataMutex);
 
@@ -59,13 +52,12 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
                 auto& GUI_file_record = it.second;
 
                 QString file_entry_list_text = QString::fromStdString(GUI_file_record.name) + "                " + QString::fromStdString(GUI_file_record.path);
-                /*
-                QString name = QString::fromStdString(it.second.name);
-                uint64_t frn = it.second.frn;
-                QString old_name = QString::fromStdString(it.second.old_name);
-                */
+                GUI_file_data["name"] = QString::fromStdString(GUI_file_record.name);
+                GUI_file_data["path"] = QString::fromStdString(GUI_file_record.path);
+
                 if (gui_map.find(GUI_file_record.frn) == gui_map.end()) {
                     QListWidgetItem* GUI_file_entry = new QListWidgetItem(file_entry_list_text);
+                    GUI_file_entry->setData(Qt::UserRole, GUI_file_data);
                     files_list->addItem(GUI_file_entry);
                     gui_map[GUI_file_record.frn] = GUI_file_entry;
                 }
@@ -73,51 +65,22 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
                     gui_map[GUI_file_record.frn]->setText(file_entry_list_text);
                 }
 
-                /*
-                if (in_list_items.find(frn) == in_list_items.end()) {
-                    qDebug() << "This code is indeed executed" << frn;
-                    files_list->addItem(name + "                " + old_name);
-                    in_list_items.insert(frn);
-                }
-                else {
-                    qDebug() << "HELPF LPEFPE KFPKEF P";
-                }
-
-                it_count++;
-                if (it_count >= 100) break;
-                */
             }
         }
-
-        // TODO: Remove items from list when they are removed from map
-        // (removed from map often means that a file was deleted by user)
-
-
-
     });
-
-
     timer->start(100);
 
+    connect(files_list, &QListWidget::itemDoubleClicked, this, &MainWindow::onItemClicked);
+
+
     indexer.onFileRemoved = [this, files_list](uint64_t GUI_removed_file_frn) {
-        // qDebug() << "This is executing";
-
-
-        //         QList<QListWidgetItem*> items = files_list->findItems(file_to_delete_from_list_name, Qt::MatchContains);
-        /*
-        for (QListWidgetItem* item : items) {
-            delete files_list->takeItem(files_list->row(item));
-        }
-
-        */
-
         if (gui_map.find(GUI_removed_file_frn) != gui_map.end()) {
             delete files_list->takeItem(files_list->row(gui_map[GUI_removed_file_frn]));
             gui_map.erase(GUI_removed_file_frn);
         }
+    };
 
-        qDebug() << "File deleted" << GUI_removed_file_frn;
-        };
+
 
     applyQSS();
 }
@@ -173,6 +136,13 @@ void MainWindow::applyQSS() {
 )";
 
     // qApp->setStyleSheet(qss);
+}
+
+void MainWindow::onItemClicked(QListWidgetItem* item) { // its double click but i dont want to change function name
+    QVariantMap GUI_file_data_get = item->data(Qt::UserRole).toMap();
+    QString path = GUI_file_data_get["path"].toString();
+
+    QDesktopServices::openUrl(QUrl::fromLocalFile(path));
 }
 
 MainWindow::~MainWindow() {

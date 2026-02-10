@@ -4,12 +4,16 @@
 #include <QMainWindow>
 #include <functional>
 #include <QListWidgetItem>
+#include <QVariantMap>
+#include <QStatusBar>
 
 class QThread;
 class Worker;
 class QTimer;
 class QLabel;
 class QString;
+class QDesktopServices;
+class QUrl;
 class USNIndexer;
 class QVBoxLayout;
 class QWidget;
@@ -23,7 +27,7 @@ public:
     explicit MainWindow(USNIndexer& indexer, QWidget* parent = nullptr);
     ~MainWindow();
 
-    // void removeItemFromList();
+    QVariantMap GUI_file_data;
 
 private:
     void setupWorker();
@@ -34,6 +38,10 @@ private:
 
     USNIndexer& indexer;
     
+
+    QStatusBar* status_bar = new QStatusBar();
+    void onItemClicked(QListWidgetItem* item);
+
     QThread* thread;
     Worker* worker;
     QTimer* timer;

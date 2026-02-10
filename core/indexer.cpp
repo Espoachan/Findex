@@ -242,7 +242,7 @@ void USNIndexer::updateIndexAfterNewData(USN_RECORD* record) {
         // std::wstring w_old_name((WCHAR*)((BYTE*)record + record->FileNameOffset), record->FileNameLength / 2 );
         auto it = index_map.find(record->FileReferenceNumber);
         if (it != index_map.end()) {
-            it->second.old_name = wstringToUtf8(record->FileName, record->FileNameLength / 2);
+            // it->second.old_name = wstringToUtf8(record->FileName, record->FileNameLength / 2);
         }
         
     } else if (reason & USN_REASON_RENAME_NEW_NAME) {

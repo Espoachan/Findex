@@ -15,7 +15,6 @@ struct FileRecord {
     uint64_t frn; // id is the file reference number
     uint64_t parent_frn;
     std::string name;
-    std::string old_name = "";
     bool is_directory;
     std::string path;
 };

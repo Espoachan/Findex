@@ -2,6 +2,7 @@
 #define WORKER_H
 
 #include <QObject>
+#include <QDebug>
 #include "indexer.hpp"
 #include "appdata.hpp"
 
@@ -44,7 +45,8 @@ public slots:
             indexer->journal_info.journal_id = current_data.UsnJournalID;
             indexer->saveJournalInfo(indexer->journal_info);
 
-            indexer->incrementalIndex(indexer->journal_info.next_usn);
+            //indexer->incrementalIndex(indexer->journal_info.next_usn);
+            fullIndex = false;
         } else {
             indexer->incrementalIndex(old_info.next_usn);
         }
