@@ -5,6 +5,7 @@
 #include <QDebug>
 #include "indexer.hpp"
 #include "appdata.hpp"
+#include <functional>
 
 class Worker : public QObject {
     Q_OBJECT
@@ -44,9 +45,12 @@ public slots:
             
             indexer->journal_info.journal_id = current_data.UsnJournalID;
             indexer->saveJournalInfo(indexer->journal_info);
+            
+            indexer->incrementalIndex(indexer->journal_info.next_usn);
+            // fullIndex = false;
 
-            //indexer->incrementalIndex(indexer->journal_info.next_usn);
-            fullIndex = false;
+            emit finishedFullIndex();
+
         } else {
             indexer->incrementalIndex(old_info.next_usn);
         }
@@ -60,6 +64,7 @@ public slots:
 
 signals:
     void finished();
+    void finishedFullIndex();
 
 private:
     USNIndexer* indexer;

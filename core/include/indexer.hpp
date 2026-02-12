@@ -43,7 +43,6 @@ public:
 
     bool saveJournalInfo(const UsnJournalInfo& info);
     bool loadJournalInfo(UsnJournalInfo& info);
-
     void incrementalIndex(USN old_usn);
     void updateIndexAfterNewData(USN_RECORD* record);
     FileRecord createFileRecordFromUSNRecord(USN_RECORD* record);

@@ -16,56 +16,67 @@
 #include <QDebug>
 #include <mutex>
 
-MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(parent), indexer(indexer_ref) 
+MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(parent), indexer(indexer_ref)
 {
-    QWidget *centralWidget = new QWidget(this);
+    QWidget* centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
-    QVBoxLayout *layout = new QVBoxLayout(centralWidget);
+    QVBoxLayout* layout = new QVBoxLayout(centralWidget);
 
-    QLabel *label = new QLabel("Yahallo test");
+    QLabel* label = new QLabel("Yahallo test");
     QListWidget* files_list = new QListWidget();
-    QToolButton *button = new QToolButton();
+    QToolButton* button = new QToolButton();
     button->setText("Do nothing");
-    
+
     layout->addWidget(button);
-    // layout->addWidget(label);
+    layout->addWidget(label);
     layout->addWidget(files_list);
 
-    status_bar->addWidget(label);
+    // status_bar->addWidget(label);
 
     setWindowTitle("Findex");
     resize(800, 600);
 
     setupWorker();
 
+    int it_count = 0;
+    const int max_files_entries_list = 10000;
+
     timer = new QTimer(this);
 
-    connect(timer, &QTimer::timeout, this, [this, files_list]() {
+    connect(timer, &QTimer::timeout, this, [this, max_files_entries_list, &it_count, files_list]() {
         
         std::lock_guard<std::mutex> lock(indexer.dataMutex);
 
         size_t count = indexer.index_map.size();
-        int it_count = 0;
-        if (count > 0) {
+
+        if (count == 0) return;
+        if (it_count < max_files_entries_list) {
             for (const auto& it : indexer.index_map) {
                 auto& GUI_file_record = it.second;
+
+                if (QString::fromStdString(GUI_file_record.path).isEmpty()) break;
 
                 QString file_entry_list_text = QString::fromStdString(GUI_file_record.name) + "                " + QString::fromStdString(GUI_file_record.path);
                 GUI_file_data["name"] = QString::fromStdString(GUI_file_record.name);
                 GUI_file_data["path"] = QString::fromStdString(GUI_file_record.path);
 
                 if (gui_map.find(GUI_file_record.frn) == gui_map.end()) {
+                    if (it_count > max_files_entries_list) break;
                     QListWidgetItem* GUI_file_entry = new QListWidgetItem(file_entry_list_text);
                     GUI_file_entry->setData(Qt::UserRole, GUI_file_data);
                     files_list->addItem(GUI_file_entry);
                     gui_map[GUI_file_record.frn] = GUI_file_entry;
+
+                    ++it_count;
+                    // qDebug() << it_count;
                 }
                 else {
                     gui_map[GUI_file_record.frn]->setText(file_entry_list_text);
                 }
 
             }
+
         }
     });
     timer->start(100);
@@ -73,10 +84,11 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
     connect(files_list, &QListWidget::itemDoubleClicked, this, &MainWindow::onItemClicked);
 
 
-    indexer.onFileRemoved = [this, files_list](uint64_t GUI_removed_file_frn) {
+    indexer.onFileRemoved = [this, &it_count, files_list](uint64_t GUI_removed_file_frn) {
         if (gui_map.find(GUI_removed_file_frn) != gui_map.end()) {
             delete files_list->takeItem(files_list->row(gui_map[GUI_removed_file_frn]));
             gui_map.erase(GUI_removed_file_frn);
+            --it_count;
         }
     };
 
