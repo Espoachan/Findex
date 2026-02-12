@@ -116,7 +116,7 @@ FileRecord USNIndexer::createFileRecordFromUSNRecord(USN_RECORD* record) {
 }
 
 void USNIndexer::indexFiles() {    
-    std::cout << "this is working fine :) \n"; // debug
+    // std::cout << "this is working fine :) \n"; // debug
 
     if (hVolume == INVALID_HANDLE_VALUE) return;
 
