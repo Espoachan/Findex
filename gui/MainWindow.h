@@ -6,6 +6,7 @@
 #include <QListWidgetItem>
 #include <QVariantMap>
 #include <QStatusBar>
+#include <QLineEdit>
 
 class QThread;
 class Worker;
@@ -35,11 +36,17 @@ private:
     void applyQSS();
     std::set<uint64_t> in_list_items;
     std::unordered_map<uint64_t, QListWidgetItem*> gui_map;
+    std::unordered_map<uint64_t, QListWidgetItem*> search_gui_map;
+
 
     USNIndexer& indexer;
-    
+    int it_count = 0;
+    int search_it_count = 0;
 
+    QLineEdit* search_bar = new QLineEdit();
     QStatusBar* status_bar = new QStatusBar();
+
+    void showIndexedEntries(QLabel *total_files_label, int max_files_entries_list, QListWidget* files_list);
     void onItemClicked(QListWidgetItem* item);
 
     QThread* thread;

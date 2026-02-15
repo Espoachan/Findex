@@ -45,13 +45,14 @@ public slots:
             
             indexer->journal_info.journal_id = current_data.UsnJournalID;
             indexer->saveJournalInfo(indexer->journal_info);
-            
+            emit finishedFullIndex();
+
             indexer->incrementalIndex(indexer->journal_info.next_usn);
             // fullIndex = false;
 
-            emit finishedFullIndex();
 
         } else {
+            emit finishedFullIndex();
             indexer->incrementalIndex(old_info.next_usn);
         }
 
