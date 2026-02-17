@@ -41,6 +41,7 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
     status_bar->addWidget(indexing_label);
 
     search_bar->setPlaceholderText("Search");
+    search_bar->setClearButtonEnabled(true);
 
     setWindowTitle("Findex");
     resize(800, 600);
@@ -51,7 +52,17 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
 
     timer = new QTimer(this);
 
-    connect(search_bar, &QLineEdit::textChanged, this, [this, files_list](const QString& text) {
+    search_timer = new QTimer(this);
+    search_timer->setSingleShot(true);
+    search_timer->setInterval(250);
+
+    connect(search_bar, &QLineEdit::textChanged, this, [=](const QString& text) {
+        search_timer->stop();
+        search_timer->start();
+        setWindowTitle("Findex - " + text);
+    });
+
+    connect(search_timer, &QTimer::timeout, this, [=]() {
         std::lock_guard<std::mutex> lock(indexer.dataMutex);
 
         files_list->clear();
@@ -62,16 +73,16 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
 
         timer->stop();
 
-        std::string search_term = text.toLower().toStdString();
+        std::string search_term = search_bar->text().toLower().toStdString();
 
         for (const auto& [frn, record] : indexer.index_map) {
             std::string name = record.name;
             std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) {
-                return std::tolower(c); 
-            });
+                return std::tolower(c);
+                });
 
             if (!search_term.empty() && name.find(search_term) == std::string::npos) {
-                continue; 
+                continue;
             }
             else if (search_term.empty()) {
                 timer->start(100);
@@ -94,7 +105,6 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
             ++search_it_count;
         }
     });
-
 
     connect(worker, &Worker::finishedFullIndex, this, [this, indexing_label]() {
         status_bar->removeWidget(indexing_label);

@@ -51,6 +51,7 @@ private:
 
     QThread* thread;
     Worker* worker;
+    QTimer* search_timer;
     QTimer* timer;
 };
 
