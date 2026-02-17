@@ -5,6 +5,8 @@
 #include <functional>
 #include <QListWidgetItem>
 #include <QVariantMap>
+#include <QMenuBar>
+#include <QMenu>
 #include <QStatusBar>
 #include <QLineEdit>
 
@@ -45,6 +47,8 @@ private:
 
     QLineEdit* search_bar = new QLineEdit();
     QStatusBar* status_bar = new QStatusBar();
+
+    QMenuBar* menu_bar = new QMenuBar();
 
     void showIndexedEntries(QLabel *total_files_label, int max_files_entries_list, QListWidget* files_list);
     void onItemClicked(QListWidgetItem* item);

@@ -8,12 +8,14 @@
 #include <QUrl>
 #include <QString>
 #include <QVBoxLayout>
+#include <QMessageBox>
 #include <QWidget>
 #include <QTimer>
 #include <QListWidget>
 #include <QToolButton>
 #include <QApplication>
 #include <QDebug>
+#include <QAction>
 #include <mutex>
 
 MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(parent), indexer(indexer_ref)
@@ -28,17 +30,45 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
     QLabel* indexing_label = new QLabel("   Indexing...    ");
 
     QListWidget* files_list = new QListWidget();
+    files_list->setSelectionMode(QAbstractItemView::ExtendedSelection);
+
     QToolButton* test_button = new QToolButton();
     test_button->setText("Do nothing");
 
     // main_layout->addWidget(test_button);
     main_layout->addWidget(files_list);
     main_layout->addWidget(search_bar);
-    
+
     setStatusBar(status_bar);
     status_bar->addWidget(test_label);
     status_bar->addWidget(total_files_label);
     status_bar->addWidget(indexing_label);
+
+    auto open_action = new QAction();
+    open_action->setText("Open selected");
+
+    auto about_action = new QAction();
+    about_action->setText("About");
+
+    auto file_menu = new QMenu();
+    file_menu->addAction(open_action);
+    file_menu->setTitle("File");
+
+    auto edit_menu = new QMenu();
+    edit_menu->setTitle("Edit");
+
+    auto view_menu = new QMenu();
+    view_menu->setTitle("View");
+
+    auto help_menu = new QMenu();
+    help_menu->addAction(about_action);
+    help_menu->setTitle("Help");
+
+    setMenuBar(menu_bar);
+    menu_bar->addMenu(file_menu);
+    menu_bar->addMenu(edit_menu);
+    menu_bar->addMenu(view_menu);
+    menu_bar->addMenu(help_menu);
 
     search_bar->setPlaceholderText("Search");
     search_bar->setClearButtonEnabled(true);
@@ -59,7 +89,11 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
     connect(search_bar, &QLineEdit::textChanged, this, [=](const QString& text) {
         search_timer->stop();
         search_timer->start();
-        setWindowTitle("Findex - " + text);
+        if (text.isEmpty()) {
+            setWindowTitle("Findex");
+            return;
+        }
+        setWindowTitle(text + " - " + "Findex");
     });
 
     connect(search_timer, &QTimer::timeout, this, [=]() {
@@ -160,7 +194,17 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
         }
     };
 
+    connect(open_action, &QAction::triggered, this, [=]() {
+        QList<QListWidgetItem*> selected_entries = files_list->selectedItems();
+        for (auto* it : selected_entries) {
+            onItemClicked(it);
+        }
+    });
 
+    connect(about_action, &QAction::triggered, this, [=]() {
+        QMessageBox::about(this, "About Findex", "Yahallo!\n\nFindex\n\nMade by espoachan\n\nMIT License\n\nhttps://github.com/Espoachan/Findex");
+
+    });
 
     applyQSS();
 }
@@ -211,6 +255,43 @@ void MainWindow::applyQSS() {
         background-color: #2d303a;
         color: white;
     }
+    QMenuBar {
+        background-color: #23262d;
+        color: #e6e6e6;
+        border-bottom: 2px solid #2d303a;
+    }   
+    QMenuBar::item {
+        background: transparent;
+        padding: 6px 12px;
+    }
+    QMenuBar::item:selected {
+        background-color: #2d303a;
+    }
+    QMenuBar::item:pressed {
+        background-color: #2d303a;
+    }
+    QMenu {
+        background-color: #23262d;
+        color: #e6e6e6;
+        border: 1px solid #3a3a3a;
+    }
+    QMenu::item {
+        padding: 6px 30px 6px 24px;
+    }
+    QMenu::item:selected {
+        background-color: #2d303a;
+    }
+    QMenu::item:disabled {
+        color: #888;
+    }
+    QMenu::separator {
+        height: 1px;
+        background: #3a3a3a;
+        margin: 4px 8px;
+    }
+    QMenu::item:checked {
+        background-color: #404040;
+    }
 )";
 
     qApp->setStyleSheet(qss);
@@ -219,6 +300,11 @@ void MainWindow::applyQSS() {
 void MainWindow::onItemClicked(QListWidgetItem* item) { // its double click but i dont want to change function name
     QVariantMap GUI_file_data_get = item->data(Qt::UserRole).toMap();
     QString path = GUI_file_data_get["path"].toString();
+
+    if (path.endsWith(".lnk")) {
+        QMessageBox::critical(this, "Yahallo", "You can't open a .lnk to a system folder file. At least not yet. Sorry :(");
+        return;
+    } 
 
     QDesktopServices::openUrl(QUrl::fromLocalFile(path));
 }
