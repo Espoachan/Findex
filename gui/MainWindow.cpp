@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "indexer.hpp"
 #include "Worker.h"
+#include "wstring_to_utf8.hpp"
 
 #include <QThread>
 #include <QDesktopServices>
@@ -11,12 +12,14 @@
 #include <QMessageBox>
 #include <QWidget>
 #include <QTimer>
+
 #include <QListWidget>
 #include <QToolButton>
 #include <QApplication>
 #include <QDebug>
 #include <QAction>
 #include <mutex>
+#include <windows.h>
 
 MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(parent), indexer(indexer_ref)
 {
@@ -36,6 +39,7 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
     test_button->setText("Do nothing");
 
     // main_layout->addWidget(test_button);
+    main_layout->addWidget(launch_search_bar);
     main_layout->addWidget(files_list);
     main_layout->addWidget(search_bar);
 
@@ -70,8 +74,11 @@ MainWindow::MainWindow(USNIndexer& indexer_ref, QWidget* parent) : QMainWindow(p
     menu_bar->addMenu(view_menu);
     menu_bar->addMenu(help_menu);
 
-    search_bar->setPlaceholderText("Search");
+    search_bar->setPlaceholderText("Search files...");
     search_bar->setClearButtonEnabled(true);
+
+    launch_search_bar->setPlaceholderText("Search applications...");
+    launch_search_bar->setClearButtonEnabled(true);
 
     setWindowTitle("Findex");
     resize(800, 600);
@@ -294,15 +301,18 @@ void MainWindow::applyQSS() {
     }
 )";
 
+    /*
     qApp->setStyleSheet(qss);
+    */
 }
 
 void MainWindow::onItemClicked(QListWidgetItem* item) { // its double click but i dont want to change function name
     QVariantMap GUI_file_data_get = item->data(Qt::UserRole).toMap();
     QString path = GUI_file_data_get["path"].toString();
+    std::string path_string = GUI_file_data_get["path"].toString().toStdString();
 
     if (path.endsWith(".lnk")) {
-        QMessageBox::critical(this, "Yahallo", "You can't open a .lnk to a system folder file. At least not yet. Sorry :(");
+        ShellExecuteA(nullptr, "open", path_string.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
         return;
     } 
 

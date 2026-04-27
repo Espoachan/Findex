@@ -46,6 +46,9 @@ private:
     int search_it_count = 0;
 
     QLineEdit* search_bar = new QLineEdit();
+
+    QLineEdit* launch_search_bar = new QLineEdit();
+
     QStatusBar* status_bar = new QStatusBar();
 
     QMenuBar* menu_bar = new QMenuBar();

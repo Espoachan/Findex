@@ -12,3 +12,10 @@ std::string wstringToUtf8(const WCHAR* p_file_name, int char_count) {
     return utf8_string;
 
 }
+
+std::wstring stdstring_to_wstring(const std::string& string) {
+    int buffer_size = MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, NULL, 0);
+    std::wstring w_string(buffer_size, 0);
+    MultiByteToWideChar(CP_UTF8, 0, string.c_str(), -1, &w_string[0], buffer_size);
+    return w_string;
+}

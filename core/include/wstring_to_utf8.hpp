@@ -3,3 +3,4 @@
 #include <windows.h>
 
 std::string wstringToUtf8(const WCHAR* p_file_name, int char_count);
+std::wstring stdstring_to_wstring(const std::string& string);
