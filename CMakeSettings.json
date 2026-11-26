@@ -20,14 +20,7 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "inheritEnvironments": [ "msvc_x64_x64" ],
-      "variables": [
-        {
-          "name": "Qt6_DIR",
-          "value": "D:/qt/6.10.2/msvc2022_64/lib/cmake/Qt6",
-          "type": "PATH"
-        }
-      ]
+      "inheritEnvironments": [ "msvc_x64_x64" ]
     }
   ]
 }

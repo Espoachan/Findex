@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
-project(Findex)
+project(Findex CXX)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_library(findex_core STATIC
     core/appdata.cpp
@@ -15,26 +15,19 @@ add_library(findex_core STATIC
 )
 
 target_include_directories(findex_core PUBLIC core/include)
+target_compile_definitions(findex_core PUBLIC NOMINMAX UNICODE _UNICODE)
+target_link_libraries(findex_core PUBLIC shell32 shlwapi advapi32 user32 ole32 oleaut32 uuid)
+if(MSVC)
+    target_compile_options(findex_core PUBLIC /utf-8 /W4 /permissive-)
+endif()
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-
-set(GUI_HEADERS
-    gui/mainwindow.h
-    gui/Worker.h
+add_executable(findex
+    cli/main.cpp
+    cli/term.cpp
+    cli/tui.cpp
+    cli/shell.cpp
+    cli/source.cpp
+    cli/service.cpp
 )
-set(GUI_SOURCES
-    gui/mainwindow.cpp
-    gui/main.cpp
-)
-
-qt_wrap_cpp(MOC_SOURCES
-    ${GUI_HEADERS}
-)
-
-qt_add_executable(findex_gui
-    ${GUI_SOURCES}
-    ${MOC_SOURCES}
-)
-
-target_link_libraries(findex_gui PRIVATE findex_core Qt6::Widgets)
-target_include_directories(findex_gui PRIVATE core/include gui)
+target_include_directories(findex PRIVATE cli)
+target_link_libraries(findex PRIVATE findex_core)
